@@ -24,7 +24,7 @@ import numpy as np
 
 from matcher.embedder import Embedder, get_embedder
 from matcher.parsing import is_education_line, split_chunks, split_sections
-from matcher.skills import count_skills, extract_skills, implied_by, lines_mentioning
+from matcher.skills import count_skills, extract_skills, implied_by, lines_mentioning, or_alternatives
 
 
 # --------------------------------------------------------------------------- #
@@ -43,20 +43,25 @@ class ModelSettings:
 
     low: float  # line-level cosine that maps to a score of 0
     high: float  # line-level cosine that maps to a score of 100
-    doc_low: float  # whole-document cosines run higher, so they get their own range
+    doc_low: float  # whole-document cosines have a different spread, so they get their own range
     doc_high: float
     skill_threshold: float  # cosine above which two skill names count as related
     line_threshold: float  # cosine above which a resume line counts as evidence for a skill
+    # How much each component contributes to the overall score.
+    weights: tuple[tuple[str, float], ...] = (("requirements", 0.5), ("skills", 0.3), ("document", 0.2))
 
 
 MODEL_SETTINGS = {
-    "minilm": ModelSettings(low=0.15, high=0.65, doc_low=0.35, doc_high=0.85, skill_threshold=0.60, line_threshold=0.55),
-    "bge-small": ModelSettings(low=0.50, high=0.80, doc_low=0.75, doc_high=0.95, skill_threshold=0.80, line_threshold=0.75),
+    "minilm": ModelSettings(low=0.15, high=0.65, doc_low=0.20, doc_high=0.70, skill_threshold=0.60, line_threshold=0.55),
+    "bge-small": ModelSettings(low=0.50, high=0.80, doc_low=0.58, doc_high=0.85, skill_threshold=0.80, line_threshold=0.75),
 }
-MODEL_SETTINGS["finetuned"] = MODEL_SETTINGS["minilm"]
-
-# How much each component contributes to the overall score.
-WEIGHTS = {"requirements": 0.5, "skills": 0.3, "document": 0.2}
+# Fine-tuning pulls all resume/JD text closer together, so its cosines are higher.
+# Its whole-document similarity was trained on labelled fit data, so it gets most
+# of the weight (fixed before evaluating, not tuned on the test set).
+MODEL_SETTINGS["finetuned"] = ModelSettings(
+    low=0.45, high=0.88, doc_low=0.50, doc_high=0.95, skill_threshold=0.85, line_threshold=0.80,
+    weights=(("requirements", 0.25), ("skills", 0.15), ("document", 0.6)),
+)
 
 STRONG, PARTIAL = 70.0, 40.0  # requirement score bands (0-100)
 
@@ -197,26 +202,26 @@ def coverage(queries: list[str], candidates: list[str], embedder: Embedder) -> f
     return float(np.mean(to_score(sims, s.low, s.high)))
 
 
-def document_similarity(resume_chunks: list[str], job_chunks: list[str], embedder: Embedder) -> float:
-    """Cosine between the average chunk embeddings of the two documents."""
-    if not resume_chunks or not job_chunks:
-        return 0.0
-    r = embedder.encode(resume_chunks).mean(axis=0)
-    j = embedder.encode(job_chunks).mean(axis=0)
-    return float(r @ j / (np.linalg.norm(r) * np.linalg.norm(j) + 1e-9))
+def document_similarity(resume_text: str, job_text: str, embedder: Embedder) -> float:
+    """Cosine between one embedding of the whole (cleaned) resume and one of the whole JD.
+
+    Models only read the first 256-512 tokens, so this is a "first impression"
+    signal; it is also exactly what finetune.py trains on.
+    """
+    r, j = embedder.encode([resume_doc_text(resume_text), job_doc_text(job_text)])
+    return float(r @ j)
 
 
 def _alternatives(job: JobInfo) -> dict[str, list[str]]:
-    """Skills offered as alternatives in one JD line, e.g. "PyTorch or TensorFlow".
+    """Skills offered as alternatives in the JD, e.g. "PyTorch or TensorFlow".
 
-    Having any one of them satisfies the others, so they shouldn't all be reported missing.
+    Having one of them satisfies the other, so they shouldn't both be reported missing.
     """
     alts: dict[str, list[str]] = {}
     for line in job.requirements:
-        if re.search(r"\bor\b", line, re.IGNORECASE):
-            group = extract_skills(line)
-            for skill in group:
-                alts.setdefault(skill, []).extend(o for o in group if o != skill)
+        for a, b in or_alternatives(line):
+            alts.setdefault(a, []).append(b)
+            alts.setdefault(b, []).append(a)
     return alts
 
 
@@ -234,10 +239,10 @@ def match_skills(job: JobInfo, resume: ResumeInfo, embedder: Embedder) -> list[S
         if skill in have:
             line = next(iter(lines_mentioning(skill, list(resume.chunks))), "")
             results.append(SkillMatch(skill, "matched", evidence=line or skill, similarity=1.0))
-        elif alt:
-            results.append(SkillMatch(skill, "related", evidence=f"you have {alt}, listed as an alternative"))
         elif skill in implied:
             results.append(SkillMatch(skill, "related", evidence=f"{implied[skill]} (implies {skill})"))
+        elif alt:
+            results.append(SkillMatch(skill, "related", evidence=f"you have {alt}, listed as an alternative"))
         else:
             unresolved.append(skill)
 
@@ -283,10 +288,10 @@ def match(resume_text: str, job_text: str, embedder: Embedder | None = None) -> 
         skill_cov = None
 
     # 3) Whole-document similarity.
-    doc = float(to_score(document_similarity(chunks, reqs, embedder), s.doc_low, s.doc_high))
+    doc = float(to_score(document_similarity(resume_text, job_text, embedder), s.doc_low, s.doc_high))
 
     components = {"requirements": float(np.mean(scores)) if len(scores) else 0.0, "skills": skill_cov, "document": doc}
-    overall = combine(components)
+    overall = combine(components, dict(s.weights))
 
     # 4) Sections.
     sec = resume.sections
@@ -310,11 +315,11 @@ def match(resume_text: str, job_text: str, embedder: Embedder | None = None) -> 
     return result
 
 
-def combine(components: dict[str, float | None]) -> float:
+def combine(components: dict[str, float | None], weights: dict[str, float]) -> float:
     """Weighted average of the available components (a missing one is skipped)."""
     present = {k: v for k, v in components.items() if v is not None}
-    total_w = sum(WEIGHTS[k] for k in present)
-    return round(sum(WEIGHTS[k] * v for k, v in present.items()) / total_w, 1) if total_w else 0.0
+    total_w = sum(weights[k] for k in present)
+    return round(sum(weights[k] * v for k, v in present.items()) / total_w, 1) if total_w else 0.0
 
 
 # --------------------------------------------------------------------------- #

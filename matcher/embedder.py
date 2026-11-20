@@ -22,7 +22,8 @@ MODELS = {
     "bge-small": "BAAI/bge-small-en-v1.5",
 }
 FINETUNED_DIR = MODELS_DIR / "minilm-resume-jd"
-DEFAULT_MODEL = "minilm"
+# Use the fine-tuned model when it has been trained (python finetune.py), it scores best.
+DEFAULT_MODEL = "finetuned" if FINETUNED_DIR.exists() else "minilm"
 
 
 def resolve_model(name: str) -> str:

@@ -120,7 +120,7 @@ def calibrate(train: pd.DataFrame, models: list[str], n: int = 600) -> None:
             r, j = analyze_resume(resume), analyze_job(job)
             _, sims = best_matches(list(j.requirements), list(r.chunks), emb)
             req_sims.extend(sims.tolist())
-            doc_sims.append(document_similarity(list(r.chunks), list(j.requirements), emb))
+            doc_sims.append(document_similarity(resume, job, emb))
         q = [5, 10, 25, 50, 75, 90, 95]
         print(f"{model}: requirement best-match cosine percentiles {dict(zip(q, np.percentile(req_sims, q).round(3)))}")
         print(f"{model}: document cosine percentiles           {dict(zip(q, np.percentile(doc_sims, q).round(3)))}")
@@ -180,7 +180,7 @@ def _plot_auc(results: dict) -> None:
         ax.text(aucs[i] + 0.005, y, f"{aucs[i]:.3f}", va="center", fontsize=9, color="#0b0b0b",
                 fontweight="bold" if i == best else "normal")
     ax.axvline(0.5, color="#52514e", lw=1, ls="--")
-    ax.text(0.502, -0.9, "coin flip", fontsize=8, color="#52514e")
+    ax.text(0.503, len(names) - 0.55, "coin flip", fontsize=8, color="#52514e")
     ax.set_xlim(0.45, min(1.0, max(aucs) + 0.08))
     ax.set_xlabel("ROC-AUC, Good Fit vs No Fit (test set)")
     ax.set_title("How well each method separates good from poor fits", loc="left", fontsize=11)
@@ -203,7 +203,7 @@ def _plot_by_label(best_scores: tuple[str, np.ndarray], test: pd.DataFrame) -> N
         patch.set_facecolor("#9fc3ef")
         patch.set_edgecolor("#2a78d6")
     ax.set_yticks([1, 2, 3], LABELS)
-    ax.set_xlabel(f"Match score ({name})")
+    ax.set_xlabel(f"Score: {name}")
     ax.set_title("Score distribution by true label (test set)", loc="left", fontsize=11)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
@@ -221,6 +221,9 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="evaluate on a random subset of the test split")
     parser.add_argument("--no-learned", action="store_true", help="skip the logistic-regression combiner (faster)")
     parser.add_argument("--calibrate", action="store_true", help="print similarity percentiles and exit")
+    parser.add_argument("--merge", action="store_true",
+                        help="keep results already in results/metrics.json and add/overwrite these models")
+    parser.add_argument("--skip-baselines", action="store_true", help="don't recompute TF-IDF / skill overlap")
     args = parser.parse_args()
 
     models = args.models or ["minilm", "bge-small"] + (["finetuned"] if FINETUNED_DIR.exists() else [])
@@ -234,25 +237,33 @@ def main() -> None:
 
     results: dict[str, dict] = {}
     extra: dict = {"learned_weights": {}}
-    results["TF-IDF cosine (baseline)"] = metrics(tfidf_scores(train, test), y)
-    results["Skill overlap (vocabulary only)"] = metrics(skill_overlap_scores(test), y)
-    print({k: round(v["auc_good_vs_no"], 3) for k, v in results.items()})
+    if args.merge and (RESULTS_DIR / "metrics.json").exists():
+        old = json.loads((RESULTS_DIR / "metrics.json").read_text(encoding="utf-8"))
+        results, extra["learned_weights"] = old["results"], old.get("learned_weights", {})
+    scores: dict[str, np.ndarray] = {}  # raw scores from this run (used for the by-label chart)
 
-    best = ("", None, -1.0)
+    def add(name: str, values: np.ndarray) -> None:
+        scores[name], results[name] = values, metrics(values, y)
+
+    if not args.skip_baselines:
+        add("TF-IDF cosine (baseline)", tfidf_scores(train, test))
+        add("Skill overlap (vocabulary only)", skill_overlap_scores(test))
+        print({k: round(v["auc_good_vs_no"], 3) for k, v in results.items()})
+
     for model in models:
-        results[f"{model} whole-doc"] = metrics(whole_doc_scores(test, model), y)
+        add(f"{model} whole-doc", whole_doc_scores(test, model))
         comps = matcher_components(test, model, desc=f"{model} matcher (test)")
-        results[f"{model} matcher"] = m = metrics(comps["overall"].to_numpy(), y)
-        if m["auc_good_vs_no"] > best[2]:
-            best = (f"{model} matcher", comps["overall"].to_numpy(), m["auc_good_vs_no"])
-        if not args.no_learned:
+        add(f"{model} matcher", comps["overall"].to_numpy())
+        # The fine-tuned model has seen the train pairs, so fitting weights on them would be biased.
+        if not args.no_learned and model != "finetuned":
             train_comps = matcher_components(train, model, desc=f"{model} matcher (train)")
             learned, weights = learned_combiner(train_comps, train["y"].to_numpy(), comps)
-            results[f"{model} matcher (learned weights)"] = metrics(learned, y)
+            add(f"{model} matcher (learned weights)", learned)
             extra["learned_weights"][model] = weights
         print({k: round(v["auc_good_vs_no"], 3) for k, v in results.items()})
 
-    write_report(results, test, (best[0], best[1]), extra)
+    best = max(scores, key=lambda n: results[n]["auc_good_vs_no"])
+    write_report(results, test, (best, scores[best]), extra)
     print((RESULTS_DIR / "metrics.md").read_text(encoding="utf-8"))
 
 

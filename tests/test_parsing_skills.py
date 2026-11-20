@@ -4,7 +4,7 @@ import docx
 import pytest
 
 from matcher.parsing import read_document, split_chunks, split_sections
-from matcher.skills import count_skills, extract_skills, implied_by
+from matcher.skills import count_skills, extract_skills, implied_by, or_alternatives
 
 
 def test_split_chunks_strips_bullets_and_short_fragments():
@@ -83,3 +83,9 @@ def test_read_document_txt_and_docx(tmp_path):
     d.save(str(path))
     text = read_document(path)
     assert "Data analyst skilled in SQL" in text and "Tableau" in text and "Excel" in text
+
+
+def test_or_alternatives_pairs_only_adjacent_skills():
+    line = "Strong Python skills and deep learning frameworks such as PyTorch or TensorFlow."
+    assert or_alternatives(line) == [("PyTorch", "TensorFlow")]
+    assert or_alternatives("Tableau / Power BI dashboards") == [("Tableau", "Power BI")]

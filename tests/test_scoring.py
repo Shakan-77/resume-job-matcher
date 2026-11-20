@@ -24,7 +24,9 @@ def test_to_score_clips_to_0_100():
 
 
 def test_combine_skips_missing_components():
-    assert combine({"requirements": 60.0, "skills": None, "document": 60.0}) == 60.0
+    weights = {"requirements": 0.5, "skills": 0.3, "document": 0.2}
+    assert combine({"requirements": 60.0, "skills": None, "document": 60.0}, weights) == 60.0
+    assert combine({"requirements": 100.0, "skills": 0.0, "document": 0.0}, weights) == 50.0
 
 
 def test_match_result_structure(embedder):

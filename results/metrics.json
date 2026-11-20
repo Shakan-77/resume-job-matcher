@@ -1,35 +1,66 @@
 {
   "results": {
     "TF-IDF cosine (baseline)": {
-      "auc_good_vs_no": 0.5462827988338192,
-      "auc_fit_vs_no": 0.5146058423369348,
-      "spearman": 0.05499772191215589
+      "auc_good_vs_no": 0.6024799620897515,
+      "auc_fit_vs_no": 0.5856633903137589,
+      "spearman": 0.15325766359229193
     },
     "Skill overlap (vocabulary only)": {
-      "auc_good_vs_no": 0.5310677842565599,
-      "auc_fit_vs_no": 0.5131052420968387,
-      "spearman": 0.03833046413788984
+      "auc_good_vs_no": 0.5568360738434572,
+      "auc_fit_vs_no": 0.5555378039725024,
+      "spearman": 0.09097865576864636
     },
     "minilm whole-doc": {
-      "auc_good_vs_no": 0.5604956268221575,
-      "auc_fit_vs_no": 0.5849339735894359,
-      "spearman": 0.11575613271329828
+      "auc_good_vs_no": 0.538996856099015,
+      "auc_fit_vs_no": 0.5717975353615847,
+      "spearman": 0.08834565847128797
     },
     "minilm matcher": {
-      "auc_good_vs_no": 0.5533892128279884,
-      "auc_fit_vs_no": 0.5588235294117647,
-      "spearman": 0.0928344786916148
+      "auc_good_vs_no": 0.5192188144894601,
+      "auc_fit_vs_no": 0.5590131614692619,
+      "spearman": 0.06094807499144879
+    },
+    "minilm matcher (learned weights)": {
+      "auc_good_vs_no": 0.5161475238595079,
+      "auc_fit_vs_no": 0.5593870227447368,
+      "spearman": 0.05855948989976326
     },
     "bge-small whole-doc": {
-      "auc_good_vs_no": 0.5847303206997084,
-      "auc_fit_vs_no": 0.6019407763105242,
-      "spearman": 0.14756940273551283
+      "auc_good_vs_no": 0.6002354104141083,
+      "auc_fit_vs_no": 0.6188671873989346,
+      "spearman": 0.17478289849312267
     },
     "bge-small matcher": {
-      "auc_good_vs_no": 0.544551749271137,
-      "auc_fit_vs_no": 0.5408663465386154,
-      "spearman": 0.06941797721265165
+      "auc_good_vs_no": 0.5486361991918595,
+      "auc_fit_vs_no": 0.5798931196588937,
+      "spearman": 0.10124573028555763
+    },
+    "bge-small matcher (learned weights)": {
+      "auc_good_vs_no": 0.5797592903038424,
+      "auc_fit_vs_no": 0.6062335222906701,
+      "spearman": 0.14754091954433188
+    },
+    "finetuned whole-doc": {
+      "auc_good_vs_no": 0.799539370098801,
+      "auc_fit_vs_no": 0.7702460757502451,
+      "spearman": 0.4699874708728572
+    },
+    "finetuned matcher": {
+      "auc_good_vs_no": 0.7309964688437884,
+      "auc_fit_vs_no": 0.7262003016762957,
+      "spearman": 0.3713518622854413
     }
   },
-  "learned_weights": {}
+  "learned_weights": {
+    "minilm": {
+      "requirements": 0.0197,
+      "skills": 0.0028,
+      "document": 0.0149
+    },
+    "bge-small": {
+      "requirements": 0.0158,
+      "skills": 0.0022,
+      "document": 0.0281
+    }
+  }
 }

@@ -291,3 +291,28 @@ def implied_by(skills: list[str]) -> dict[str, str]:
         for implied in IMPLIES.get(skill, []):
             out.setdefault(implied, skill)
     return out
+
+
+def skill_spans(text: str) -> list[tuple[int, int, str]]:
+    """Every vocabulary-skill mention in ``text`` as (start, end, skill), sorted by position."""
+    spans = []
+    for skill, patterns in _compiled().items():
+        for p in patterns:
+            spans.extend((m.start(), m.end(), skill) for m in p.finditer(text))
+    return sorted(spans)
+
+
+def or_alternatives(text: str) -> list[tuple[str, str]]:
+    """Pairs of skills joined by "or" / "/" in ``text``: "PyTorch or TensorFlow" -> [("PyTorch", "TensorFlow")].
+
+    Only the skill right before and right after the "or" are paired, so in
+    "Python and frameworks such as PyTorch or TensorFlow" Python is not an alternative.
+    """
+    spans = skill_spans(text)
+    pairs = []
+    for m in re.finditer(r"\s+or\s+|\s*/\s*", text, re.IGNORECASE):
+        before = [s for s in spans if s[1] <= m.start()]
+        after = [s for s in spans if s[0] >= m.end()]
+        if before and after and before[-1][1] == m.start() and after[0][0] == m.end():
+            pairs.append((before[-1][2], after[0][2]))
+    return pairs
