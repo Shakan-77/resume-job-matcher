@@ -1,0 +1,25 @@
+Alex Rivera (fictional example)
+Machine Learning Engineer | alex.rivera@example.com
+
+SUMMARY
+Machine learning engineer with 3 years of experience building NLP and recommendation models in production.
+
+SKILLS
+Python, PyTorch, scikit-learn, Hugging Face Transformers, SQL, Pandas, Docker, Git, Linux, FastAPI
+
+EXPERIENCE
+Machine Learning Engineer, Brightline Analytics (2022 - present)
+- Fine-tuned BERT models in PyTorch for support ticket classification, raising macro-F1 from 0.71 to 0.86.
+- Built a FastAPI inference service in Docker serving 2M predictions per day with p95 latency under 80 ms.
+- Designed feature pipelines in SQL and Pandas over 40M customer events for a product recommender.
+- Mentored two junior engineers and ran weekly code reviews.
+
+Data Analyst, Northwind Retail (2020 - 2022)
+- Automated weekly sales reports with Python, saving the team 6 hours per week.
+- Ran A/B tests on checkout flows and presented findings to product managers.
+
+PROJECTS
+- Semantic search over 100k research abstracts using sentence embeddings and FAISS.
+
+EDUCATION
+B.S. in Computer Science, Lakeside State University, 2020

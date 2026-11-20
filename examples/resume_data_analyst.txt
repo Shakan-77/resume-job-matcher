@@ -1,0 +1,21 @@
+Sam Patel (fictional example)
+Data Analyst | sam.patel@example.com
+
+PROFILE
+Detail-oriented data analyst who turns messy business data into clear dashboards and decisions.
+
+TECHNICAL SKILLS
+SQL, Excel, Tableau, Power BI, Python, Pandas, Statistics
+
+WORK EXPERIENCE
+Data Analyst, Greenleaf Logistics (2021 - present)
+- Built Power BI dashboards tracking delivery performance across 120 depots, used daily by operations leads.
+- Wrote SQL queries on PostgreSQL to analyse 5 years of shipment data and found a 12% cost saving.
+- Forecasted monthly demand with linear regression models in Python.
+
+Operations Assistant, Greenleaf Logistics (2019 - 2021)
+- Maintained inventory spreadsheets and reconciled supplier invoices.
+
+EDUCATION
+B.A. in Economics, Riverside University, 2019
+Google Data Analytics Certificate, 2021

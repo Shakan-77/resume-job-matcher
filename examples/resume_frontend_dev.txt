@@ -1,0 +1,18 @@
+Jordan Lee (fictional example)
+Frontend Developer | jordan.lee@example.com
+
+SKILLS
+JavaScript, TypeScript, React, Next.js, HTML, CSS, Tailwind CSS, Redux, Jest, Figma, Git
+
+EXPERIENCE
+Frontend Developer, Pixelcraft Studio (2021 - present)
+- Built a React and TypeScript design system used by 6 product teams.
+- Improved Lighthouse performance score from 62 to 95 by code-splitting and image optimisation.
+- Implemented accessible forms (WCAG 2.1 AA) and wrote unit tests with Jest and React Testing Library.
+- Collaborated with designers in Figma to ship 30+ features per quarter.
+
+Junior Web Developer, Sunrise Agency (2019 - 2021)
+- Developed responsive marketing websites with HTML, CSS and JavaScript for 20+ clients.
+
+EDUCATION
+Diploma in Web Development, Harbor City College, 2019

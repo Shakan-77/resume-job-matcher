@@ -1,0 +1,19 @@
+Machine Learning Engineer - NLP (fictional example posting)
+
+About the role
+We are looking for a Machine Learning Engineer to build and deploy NLP models that power our customer support platform.
+
+Requirements
+- 2+ years of experience building machine learning models in production.
+- Strong Python skills and experience with deep learning frameworks such as PyTorch or TensorFlow.
+- Experience with transformer models (BERT, GPT) and natural language processing.
+- Experience deploying models as REST APIs with Docker and Kubernetes on AWS.
+- Solid SQL skills and experience building data pipelines.
+- Familiarity with MLOps tools such as MLflow and CI/CD.
+- Bachelor's degree in Computer Science or a related field.
+
+Nice to have
+- Experience with large language models and retrieval augmented generation.
+- Strong communication skills and experience mentoring others.
+
+We offer competitive salary, health insurance and paid time off. We are an equal opportunity employer.

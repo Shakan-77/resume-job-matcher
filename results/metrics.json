@@ -1,0 +1,35 @@
+{
+  "results": {
+    "TF-IDF cosine (baseline)": {
+      "auc_good_vs_no": 0.5462827988338192,
+      "auc_fit_vs_no": 0.5146058423369348,
+      "spearman": 0.05499772191215589
+    },
+    "Skill overlap (vocabulary only)": {
+      "auc_good_vs_no": 0.5310677842565599,
+      "auc_fit_vs_no": 0.5131052420968387,
+      "spearman": 0.03833046413788984
+    },
+    "minilm whole-doc": {
+      "auc_good_vs_no": 0.5604956268221575,
+      "auc_fit_vs_no": 0.5849339735894359,
+      "spearman": 0.11575613271329828
+    },
+    "minilm matcher": {
+      "auc_good_vs_no": 0.5533892128279884,
+      "auc_fit_vs_no": 0.5588235294117647,
+      "spearman": 0.0928344786916148
+    },
+    "bge-small whole-doc": {
+      "auc_good_vs_no": 0.5847303206997084,
+      "auc_fit_vs_no": 0.6019407763105242,
+      "spearman": 0.14756940273551283
+    },
+    "bge-small matcher": {
+      "auc_good_vs_no": 0.544551749271137,
+      "auc_fit_vs_no": 0.5408663465386154,
+      "spearman": 0.06941797721265165
+    }
+  },
+  "learned_weights": {}
+}

@@ -1,0 +1,13 @@
+Business Data Analyst (fictional example posting)
+
+Responsibilities
+- Build and maintain dashboards in Tableau or Power BI for operations and finance teams.
+- Write complex SQL queries to extract and analyse data from our data warehouse.
+- Perform statistical analysis and A/B testing to support business decisions.
+- Present insights clearly to non-technical stakeholders.
+
+Qualifications
+- 2+ years of experience as a data analyst.
+- Advanced Excel skills.
+- Experience with Python or R for data analysis is a plus.
+- Bachelor's degree in Statistics, Economics, Mathematics or a related field.
